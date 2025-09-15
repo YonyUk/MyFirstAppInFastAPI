@@ -5,48 +5,77 @@ from api.users.admin import router as admin_router
 from main import app
 from tests.tools import fake_invalid_user,fake_valid_user,fake_admin_user
 from security import get_current_user
+import pytest
+from models import User
 
 valid_user = fake_valid_user()
 invalid_user = fake_invalid_user()
 admin_user = fake_admin_user()
 
-client = TestClient(app,backend='asyncio')
 
-# def test_create_valid_user():
-#     response = client.post(
-#         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/register',
-#         json=valid_user
-#     )
-#     assert response.status_code == 201
-#     assert response.json()['email'] == valid_user['email']
-#     assert response.json()['username'] == valid_user['username']
+@pytest.fixture(scope='session')
+def client():
+    def mock_get_current_user():
+        return User(
+            username='admin',
+            id='8340b3f6-a6f1-41b5-8c51-217288ef7e62',
+            email='admin@example.com',
+            hashed_password=ENVIRONMENT.CRYPT_CONTEXT.hash('admin'),
+            admin=True
+        )
+    app.dependency_overrides[get_current_user] = mock_get_current_user
+    with TestClient(app,backend='asyncio') as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
 
-# def test_create_invalid_user():
-#     response = client.post(
-#         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/register',
-#         json=invalid_user
-#     )
-#     assert response.status_code == 422
-#     assert response.json()['detail'][0]['type'] == 'value_error'
-
-def test_create_admin_user():
+@pytest.fixture(scope='session')
+def auth_token(client):
     response = client.post(
         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
         data={
             'username':'admin',
-            'password':'admin'
+            'password':'admin',
+            'grant_type':'password'
         },
         headers={
-            'Content-Type':'application/x-www-form-urlencoded'
+            'Content-Type':'application/x-www-form-urlencoded',
         }
     )
-    assert response.status_code == 200
-    assert 'access_token' in response.json()
-    assert response.json()['token_type'] == 'bearer'
+    return response.json()['access_token']
+
+def test_create_valid_user(client):
+    response = client.post(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/register',
+        json=valid_user
+    )
+    assert response.status_code == 201
+    assert response.json()['email'] == valid_user['email']
+    assert response.json()['username'] == valid_user['username']
+
+def test_create_invalid_user(client):
+    response = client.post(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/register',
+        json=invalid_user
+    )
+    assert response.status_code == 422
+    assert response.json()['detail'][0]['type'] == 'value_error'
+
+def test_create_admin_user(client):
+    response = client.post(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
+        data={
+            'username':'admin',
+            'password':'admin',
+            'grant_type':'password'
+        },
+        headers={
+            'Content-Type':'application/x-www-form-urlencoded',
+        }
+    )
     token = response.json()['access_token']
     response = client.post(
         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{admin_router.prefix}/users/register',
-        data=admin_user,
+        json=admin_user,
         headers={
             'Authorization':f'Bearer {token}'
         },
@@ -56,37 +85,54 @@ def test_create_admin_user():
     assert response.json()['username'] == admin_user['username']
     assert response.json()['admin'] == admin_user['admin']
 
-# def test_valid_login():
-#     response = client.post(
-#         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
-#         data={'username':valid_user['username'],'password':valid_user['password']}
-#     )
-#     assert response.status_code == 200
-#     assert response.json()['token_type'] == 'bearer'
+def test_valid_login(client):
+    response = client.post(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
+        data={
+            'username':valid_user['username'],
+            'password':valid_user['password'],
+            'grant_type':'password'
+        },
+        headers={
+            'Content-Type':'application/x-www-form-urlencoded'
+        }
+    )
+    assert response.status_code == 200
+    assert response.json()['token_type'] == 'bearer'
 
-# def test_invalid_login():
-#     response = client.post(
-#         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
-#         data={'username':invalid_user['username'],'password':invalid_user['password']}
-#     )
-#     assert response.status_code == 401
-#     assert response.json()['detail'] == 'Incorrect username or password'
+def test_invalid_login(client):
+    response = client.post(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
+        data={
+            'username':invalid_user['username'],
+            'password':invalid_user['password'],
+            'grant_type':'password'
+        },
+        headers={
+            'Content-Type':'application/x-www-form-urlencoded'
+        }
+    )
+    assert response.status_code == 401
+    assert response.json()['detail'] == 'Incorrect username or password'
 
-# def test_admin_login():
-#     response = client.post(
-#         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
-#         data={'username':admin_user['username'],'password':admin_user['password']}
-#     )
-#     assert response.status_code == 200
-#     assert response.json()['token_type'] == 'bearer'
-#     access_token = response.json()['access_token']
+def test_admin_login(client):
+    response = client.post(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{user_router.prefix}/token',
+        data={
+            'username':admin_user['username'],
+            'password':admin_user['password'],
+            'grant_type':'password'
+        }
+    )
+    assert response.status_code == 200
+    assert response.json()['token_type'] == 'bearer'
 
-# def test_valid_get_users():
-#     response = client.get(
-#         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{admin_router.prefix}/users?skip=0&limit=100',
-#         headers={
-#             'Authorization':f'Bearer {access_token}'
-#         }
-#     )
-#     assert response.status_code == 200
-#     assert len(response.json()) <= 100
+def test_valid_get_users(client,auth_token):
+    response = client.get(
+        f'{ENVIRONMENT.GLOBAL_API_PREFIX}{admin_router.prefix}/users?skip=0&limit=100',
+        headers={
+            'Authorization':f'Bearer {auth_token}'
+        }
+    )
+    assert response.status_code == 200
+    assert len(response.json()) <= 100

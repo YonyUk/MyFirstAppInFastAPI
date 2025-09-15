@@ -32,7 +32,8 @@ async def register_user(
     db_user = User(
         username=user.username,
         email=user.email,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        admin=user.admin
     )
     await service.add_user(db_user)
     return db_user
