@@ -25,7 +25,7 @@ async def register_user(
     db_user = await service.get_by_name(user.username)
     if db_user:
         raise USER_ALREADY_EXISTS_ECXCEPTION
-    db_email = service.get_user_by_email(user.email)
+    db_email = await service.get_user_by_email(user.email)
     if db_email:
         raise EMAIL_ALREADY_REGISTERED_EXCEPTION
     hashed_password = ENVIRONMENT.CRYPT_CONTEXT.hash(user.password)
@@ -168,5 +168,5 @@ async def delete_user_by_name(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='user not found'
         )
-    await service.delete_user(user)
+    await service.delete_user(user.id)
     return {'message':'user deleted'}
