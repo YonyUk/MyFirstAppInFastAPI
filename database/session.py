@@ -6,7 +6,13 @@ from settings import ENVIRONMENT
 DB_ENGINE = ENVIRONMENT.DB_ENGINE
 
 # create the engine to use in the database
-ENGINE = create_async_engine(url=f'{DB_ENGINE}+asyncpg://{ENVIRONMENT.DB_URL}',echo=True)
+ENGINE = create_async_engine(
+    url=f'{DB_ENGINE}+asyncpg://{ENVIRONMENT.DB_URL}',
+    echo=True,
+    pool_size=85,
+    max_overflow=10,
+    pool_timeout=60
+)
 
 # create the database session manager
 AsyncSessionLocal = async_sessionmaker(
@@ -14,7 +20,7 @@ AsyncSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
     autoflush=False,
-    autocommit=False
+    autocommit=False,
 )
 
 # create the base model for the models of database

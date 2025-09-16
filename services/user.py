@@ -66,7 +66,7 @@ class UserService:
         '''
         return await self._repository.get_by_id(id)
 
-    async def get_users(self,limit:int=100,skip:int=0) -> List[User]:
+    async def get_users(self,limit:int=100,skip:int=0,admin:bool | None = None) -> List[User]:
         '''
         gets the users
 
@@ -74,4 +74,4 @@ class UserService:
             limit: int -> limit of users in the result
             skip: int -> number of registes to skip
         '''
-        return await self._repository.get_all(limit,skip)
+        return await self._repository.get_all(limit,skip,admin)

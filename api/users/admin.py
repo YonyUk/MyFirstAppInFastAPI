@@ -46,10 +46,11 @@ async def get_users(
     service:UserService=Depends(get_user_service),
     current_user:User=Depends(get_current_user),
     skip: int = Query(0,ge=0,description='Number of registers to skip'),
-    limit:int = Query(100,ge=1,le=1000,description='Limit of registers pre response')
+    limit:int = Query(100,ge=1,le=1000,description='Limit of registers pre response'),
+    admin:bool | None = Query(None,description='the kind of users to retrieve, admins, not admins or both')
 ):
     if bool(current_user.admin):
-        return await service.get_users(limit,skip)
+        return await service.get_users(limit,skip,admin)
     raise UNAUTHORIZED_EXCEPTION
 
 @router.get(

@@ -83,7 +83,7 @@ class UserRepository:
         )
         return result.scalars().first()
     
-    async def get_all(self,limit:int=100,skip:int=0) -> List[User]:
+    async def get_all(self,limit:int=100,skip:int=0,admin:bool | None = None) -> List[User]:
         '''
         gets the users
 
@@ -91,7 +91,10 @@ class UserRepository:
             limit: int -> limit of users in the result
             skip: int -> number of registes to skip
         '''
+        # build the query
+        query = select(User).offset(skip).limit(limit)
         result = await self._db.execute(
-            select(User).offset(skip).limit(limit)
+            # if not admin param is passed, execute tha query as it, else an 'where' sentence is applied
+            query if admin is None else query.where(User.admin==admin)
         )
         return list(result.scalars().all())
