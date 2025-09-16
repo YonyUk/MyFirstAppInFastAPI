@@ -19,6 +19,12 @@ async def create_user_async(async_client:AsyncClient,url:str,headers:dict | None
     )
     return response
 
+@pytest.fixture
+def event_loop():
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
 @pytest.mark.asyncio
 async def test_massive_create_user():
     async_client = AsyncClient(

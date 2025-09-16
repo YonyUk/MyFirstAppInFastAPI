@@ -14,7 +14,7 @@ admin_user = fake_admin_user()
 
 @pytest.fixture
 def client():
-    def mock_get_current_user():
+    async def mock_get_current_user():
         return User(
             username='admin',
             id='8340b3f6-a6f1-41b5-8c51-217288ef7e62',
@@ -125,7 +125,7 @@ def test_admin_login(client):
     )
     assert response.status_code == 200
     assert response.json()['token_type'] == 'bearer'
-    
+
 def test_valid_get_users(client,auth_token):
     response = client.get(
         f'{ENVIRONMENT.GLOBAL_API_PREFIX}{admin_router.prefix}/users?skip=0&limit=100',
