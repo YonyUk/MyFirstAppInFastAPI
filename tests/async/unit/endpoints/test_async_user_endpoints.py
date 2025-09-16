@@ -8,7 +8,8 @@ from settings import ENVIRONMENT
 from main import app
 from api.users.users import router as user_router
 
-TOTAL_USERS = 10
+TOTAL_USERS = 1000
+CONCURRENT_REQUEST = 100
 
 async def create_user_async(async_client:AsyncClient,url:str,headers:dict | None = None):
     user = fake_valid_user()
@@ -35,14 +36,15 @@ async def test_massive_create_user():
     successfull_responses_count = 0
     t = datetime.datetime.now()
     tasks = set()
-    for _ in range(TOTAL_USERS):
-        task = asyncio.create_task(create_user_async(async_client,url))
-        tasks.add(task)
-        task.add_done_callback(tasks.discard)
-    responses = await asyncio.gather(*tasks)
-    for resp in responses:
-        if resp.status_code == 201:
-            successfull_responses_count += 1
+    for _ in range(0,TOTAL_USERS,CONCURRENT_REQUEST):
+        for _ in range(CONCURRENT_REQUEST):
+            task = asyncio.create_task(create_user_async(async_client,url))
+            tasks.add(task)
+            task.add_done_callback(tasks.discard)
+        responses = await asyncio.gather(*tasks)
+        for resp in responses:
+            if resp.status_code == 201:
+                successfull_responses_count += 1
     t = datetime.datetime.now() - t
     msg = f'OK {successfull_responses_count}, WRONG {TOTAL_USERS - successfull_responses_count}'
     msg += f' time transcurred {t}'
