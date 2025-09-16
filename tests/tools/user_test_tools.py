@@ -49,12 +49,3 @@ def fake_admin_user() -> dict:
         'password':_fake_username(),
         'admin':True
     }
-
-async def create_user_async(client:AsyncClient,url:str,headers:dict | None = None):
-    user = fake_valid_user()
-    response = await client.post(
-        url,
-        json=user,
-        headers=headers if not headers is None else {} 
-    )
-    return response
