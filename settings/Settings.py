@@ -22,6 +22,30 @@ class EnvironmentSettings:
         self._token_life_time:int = int(os.getenv('ACCESS_TOKEN_EXPIRES_MINUTES','access token life time'))
         self._alembic_config_file_path:str = os.getenv('ALEMBIC_CONFIG_FILE','alembic config file path')
         self._crypt_context:CryptContext = CryptContext(schemes=['bcrypt'],deprecated='auto')
+        self._sqlalchemy_pool_size:int = int(os.getenv('SQLALCHEMY_POOL_SIZE','pool size for sqlalchemy'))
+        self._sqlalchemy_max_overflow:int = int(os.getenv('SQLALCHEMY_MAX_OVERFLOW','max overflow allowed for sqlalchemy'))
+        self._sqlalchemy_pool_timeout:int = int(os.getenv('SQLALCHEMY_POOL_TIMEOUT','pool timeout for sqlalchemy'))
+
+    @property
+    def SQLALCHEMY_POOL_SIZE(self) -> int:
+        '''
+        pool size for sqlalchemy
+        '''
+        return self._sqlalchemy_pool_size
+
+    @property
+    def SQLALCHEMY_MAX_OVERFLOW(self) -> int:
+        '''
+        max overflow allowed for sqlalchemy
+        '''
+        return self._sqlalchemy_max_overflow
+    
+    @property
+    def SQLALCHEMY_POOL_TIMEOUT(self) -> int:
+        '''
+        pool timeout for sqlalchemy
+        '''
+        return self._sqlalchemy_pool_timeout
 
     @property
     def CRYPT_CONTEXT(self) -> CryptContext:

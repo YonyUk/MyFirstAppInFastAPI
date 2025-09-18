@@ -9,9 +9,9 @@ DB_ENGINE = ENVIRONMENT.DB_ENGINE
 ENGINE = create_async_engine(
     url=f'{DB_ENGINE}+asyncpg://{ENVIRONMENT.DB_URL}',
     echo=True,
-    pool_size=85,
-    max_overflow=10,
-    pool_timeout=60
+    pool_size=ENVIRONMENT.SQLALCHEMY_POOL_SIZE,
+    max_overflow=ENVIRONMENT.SQLALCHEMY_MAX_OVERFLOW,
+    pool_timeout=ENVIRONMENT.SQLALCHEMY_POOL_TIMEOUT
 )
 
 # create the database session manager
