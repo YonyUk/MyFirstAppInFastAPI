@@ -123,7 +123,6 @@ async def update_user_by_name(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='user not found'
         )
-    # breakpoint()
     await service.update_user(user.id,user_update)
     return user
 
