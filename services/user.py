@@ -1,7 +1,12 @@
 from typing import List
 from repositories import UserRepository
 from models import User
-from schemas import UserAdminUpdate
+from schemas import (
+    UserAdminUpdate,
+    UserCreateAdmin,
+    UserCreate,
+    UserUpdate
+)
 from settings import ENVIRONMENT
 
 class UserService:
@@ -19,6 +24,27 @@ class UserService:
     def _verify_password_hash(self,password:str,hashed_password:str) -> bool:
         return self._crypt_context.verify(password,hashed_password)
     
+    def _get_user_instance(self,user:UserCreateAdmin | UserCreate | UserAdminUpdate | UserUpdate,user_id:str | None = None) -> User:
+        if isinstance(user,UserCreateAdmin):
+            db_user = User(
+                id=user_id,
+                username=user.username,
+                email=user.email,
+                admin=user.admin,
+                hashed_password=ENVIRONMENT.CRYPT_CONTEXT.hash(user.password)
+            )
+        elif isinstance(user,UserCreate):
+            db_user = User(
+                id=user_id,
+                username=user.username,
+                email=user.email,
+                admin=False,
+                hashed_password=ENVIRONMENT.CRYPT_CONTEXT.hash(user.password)
+            )
+        else:
+            raise TypeError()
+        return db_user
+    
     async def authenticate_user(self,username:str,password:str) -> User | None:
         '''
         authenticates an user
@@ -30,17 +56,19 @@ class UserService:
             return None
         return user
 
-    async def add_user(self,user:User) -> User | None:
+    async def add_user(self,user:UserCreateAdmin | UserCreate) -> User | None:
         '''
         adds a new user
         '''
-        return await self._repository.create(user)
+        db_user = self._get_user_instance(user)
+        return await self._repository.create(db_user)
 
-    async def update_user(self,user_id:str,user_update:UserAdminUpdate) -> User | None:
+    async def update_user(self,user_id:str,user_update:UserAdminUpdate | UserUpdate) -> User | None:
         '''
         updates an user
         '''
-        return await self._repository.update(user_id,user_update)
+        db_user = self._get_user_instance(user_update,user_id)
+        return await self._repository.update(user_id,db_user)
     
     async def delete_user(self,user_id:str) -> bool:
         '''

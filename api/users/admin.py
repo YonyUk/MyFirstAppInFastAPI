@@ -25,17 +25,10 @@ async def register_user(
     db_user = await service.get_by_name(user.username)
     if db_user:
         raise USER_ALREADY_EXISTS_ECXCEPTION
-    db_email = await service.get_user_by_email(user.email)
-    if db_email:
+    db_user = await service.get_user_by_email(user.email)
+    if db_user:
         raise EMAIL_ALREADY_REGISTERED_EXCEPTION
-    hashed_password = ENVIRONMENT.CRYPT_CONTEXT.hash(user.password)
-    db_user = User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password,
-        admin=user.admin
-    )
-    await service.add_user(db_user)
+    await service.add_user(user)
     return db_user
 
 @router.get(
@@ -130,7 +123,8 @@ async def update_user_by_name(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='user not found'
         )
-    await service.update_user(user,user_update)
+    # breakpoint()
+    await service.update_user(user.id,user_update)
     return user
 
 @router.delete(

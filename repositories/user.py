@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select,update
 from models import User
-from schemas.user import UserAdminUpdate
+from schemas import UserCreateAdmin,UserCreate
 from settings import ENVIRONMENT
 
 class UserRepository:
@@ -17,6 +17,15 @@ class UserRepository:
     def _get_password_hash(self,password:str) -> str:
         return self._crypt_context.hash(password)
 
+    def _user_to_dict(self,user:User) -> dict:
+        return {
+            'id':user.id,
+            'username':user.username,
+            'email':user.email,
+            'hashed_password':user.hashed_password,
+            'admin':user.admin
+        }
+
     async def create(self,user:User) -> User | None:
         '''
         adds a new user to database
@@ -26,15 +35,15 @@ class UserRepository:
         await self._db.refresh(user)
         return user
     
-    async def update(self,user_id:str,user_update:UserAdminUpdate) -> User | None:
+    async def update(self,user_id:str,user_update:User) -> User | None:
         '''
         updates the data of the given user
         '''
         user = await self.get_by_id(user_id)
         if user is None:
             return None
-        
-        update_data = user_update.model_dump(exclude_unset=True)
+
+        update_data = self._user_to_dict(user_update)
         if not update_data is None:
             await self._db.execute(
                 update(User).where(User.id==user_id).values(**update_data)
@@ -74,12 +83,12 @@ class UserRepository:
         )
         return result.scalars().first()
     
-    async def get_by_id(self,id:str) -> User | None:
+    async def get_by_id(self,user_id:str) -> User | None:
         '''
         gets an user by his id
         '''
         result = await self._db.execute(
-            select(User).where(User.id==id)
+            select(User).where(User.id==user_id)
         )
         return result.scalars().first()
     

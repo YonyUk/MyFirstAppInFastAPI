@@ -23,16 +23,10 @@ async def register_user(
     db_user = await service.get_by_name(user.username)
     if db_user:
         raise USER_ALREADY_EXISTS_ECXCEPTION
-    db_email = await service.get_user_by_email(user.email)
-    if db_email:
+    db_user = await service.get_user_by_email(user.email)
+    if db_user:
         raise EMAIL_ALREADY_REGISTERED_EXCEPTION
-    hashed_password = ENVIRONMENT.CRYPT_CONTEXT.hash(user.password)
-    db_user = User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password
-    )
-    await service.add_user(db_user)
+    db_user = await service.add_user(user)
     return db_user
 
 @router.post("/token", response_model=Token)
