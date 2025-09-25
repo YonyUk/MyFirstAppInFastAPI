@@ -3,6 +3,7 @@ from string import ascii_letters,ascii_lowercase
 from uuid import uuid4
 from models import User
 from settings import ENVIRONMENT
+from schemas import UserCreate,UserCreateAdmin,UserUpdate,UserAdminUpdate
 
 def fake_no_admin_user() -> User:
     username = ''.join(random.choices(ascii_letters,k=random.randint(5,15)))
@@ -29,3 +30,32 @@ def fake_admin_user() -> User:
         hashed_password=user.hashed_password,
         admin=True
     )
+
+def fake_create_no_admin_user() -> UserCreate:
+    user = fake_admin_user()
+    r_user = UserCreate(
+        username=user.username,
+        email=user.email,
+        password=''.join(random.choices(ascii_letters,k=random.randint(5,15)))
+    )
+    return r_user
+
+def fake_admin_create_no_admin_user() -> UserCreateAdmin:
+    user = fake_create_no_admin_user()
+    r_user = UserCreateAdmin(
+        username=user.username,
+        email=user.email,
+        password=''.join(random.choices(ascii_letters,k=random.randint(5,15))),
+        admin=False
+    )
+    return r_user
+
+def fake_admin_create_admin_user() -> UserCreateAdmin:
+    user = fake_admin_create_no_admin_user()
+    r_user = UserCreateAdmin(
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        admin=True
+    )
+    return r_user

@@ -6,9 +6,8 @@ from tests.tools.users_tools import (
     fake_no_admin_user,
     fake_admin_user
 )
-from settings import TEST_ENVIRONMENT,ENVIRONMENT
+from settings import TEST_ENVIRONMENT
 from repositories import UserRepository
-from schemas import UserAdminUpdate
 from models import User
 
 @pytest.fixture(scope='session')
