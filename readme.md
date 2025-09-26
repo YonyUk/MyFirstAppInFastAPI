@@ -50,10 +50,10 @@ fastapi dev main.py
 
  - `Linux`
 ```bash
-python3 main_tests.py
+python3 tests
 ```
 
  - `Windows`
 ```shell
-python main_tests.py
+python tests
 ```
